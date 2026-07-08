@@ -30,7 +30,6 @@
             touch-action: manipulation;
         }
 
-        /* --- Minesweeper UI --- */
         .game-header { text-align: center; margin-bottom: 15px; z-index: 10; width: 90%; }
         .game-header h1 { margin: 0; font-size: clamp(1.5rem, 8vw, 2.5rem); letter-spacing: 2px; color: var(--accent); }
         .instruction { color: #888; font-size: clamp(0.75rem, 3vw, 0.9rem); }
@@ -87,7 +86,6 @@
         .cell:active { background: var(--cell-hover); transform: scale(0.95); }
         .cell.revealed { background: #111; cursor: default; border: 1px solid #222; }
 
-        /* --- Prank Visual Chaos --- */
         @keyframes rainbow-bg {
             0% { background: #ff00ff; }
             20% { background: #00ffff; }
@@ -115,7 +113,6 @@
             animation: rainbow-bg 0.1s infinite, shake 0.05s infinite, zoom-pulse 0.4s infinite !important;
         }
 
-        /* --- Popup --- */
         #popup {
             position: fixed;
             top: 50%;
@@ -212,7 +209,6 @@
         </div>
     </div>
 
-    <!-- Replace src with your local file path -->
     <audio id="audioDisco" src="Music/Caramelldansen SpeedyCake Remix.mp3" loop></audio>
 
     <script>
