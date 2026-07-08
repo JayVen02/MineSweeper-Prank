@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Minesweeper - Safe & Secure</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Minesweeper Professional</title>
     <style>
         :root {
             --bg: #121212;
@@ -11,6 +11,7 @@
             --cell: #2a2a2a;
             --cell-hover: #3a3a3a;
             --accent: #00ff88;
+            --grid-size: clamp(280px, 85vw, 400px);
         }
 
         body, html {
@@ -20,29 +21,29 @@
             height: 100%;
             background-color: var(--bg);
             color: white;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Segoe UI', system-ui, sans-serif;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             overflow: hidden;
+            touch-action: manipulation;
         }
 
         /* --- Minesweeper UI --- */
-        .game-header { text-align: center; margin-bottom: 20px; z-index: 10; }
-        .game-header h1 { margin: 0; font-size: 2.5rem; letter-spacing: 2px; color: var(--accent); }
-        .instruction { color: #888; font-size: 0.9rem; }
+        .game-header { text-align: center; margin-bottom: 15px; z-index: 10; width: 90%; }
+        .game-header h1 { margin: 0; font-size: clamp(1.5rem, 8vw, 2.5rem); letter-spacing: 2px; color: var(--accent); }
+        .instruction { color: #888; font-size: clamp(0.75rem, 3vw, 0.9rem); }
 
         .dashboard {
             background: var(--panel);
-            width: 320px;
-            padding: 15px;
+            width: var(--grid-size);
+            padding: 10px;
             display: flex;
             justify-content: space-between;
             border-radius: 10px 10px 0 0;
             border: 2px solid #333;
             border-bottom: none;
-            font-family: 'Courier New', monospace;
             box-sizing: border-box;
         }
 
@@ -51,43 +52,42 @@
             color: #ff0044;
             padding: 5px 10px;
             border: 1px solid #444;
-            font-size: 1.2rem;
+            font-family: 'Courier New', monospace;
+            font-size: clamp(0.9rem, 4vw, 1.2rem);
             font-weight: bold;
         }
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(8, 40px);
-            grid-template-rows: repeat(8, 40px);
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
             gap: 2px;
             background: #333;
-            padding: 10px;
+            padding: 8px;
+            width: var(--grid-size);
+            height: var(--grid-size);
             border: 2px solid #333;
             border-radius: 0 0 10px 10px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.8);
             z-index: 10;
+            box-sizing: border-box;
         }
 
         .cell {
-            width: 40px;
-            height: 40px;
             background: var(--cell);
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-weight: bold;
-            transition: all 0.1s;
+            font-size: clamp(1rem, 5vw, 1.5rem);
+            transition: background 0.1s;
             user-select: none;
         }
 
-        .cell:hover { background: var(--cell-hover); }
-        .cell.revealed { background: #111; cursor: default; }
-        .n-1 { color: #3498db; }
-        .n-2 { color: #2ecc71; }
-        .n-3 { color: #e74c3c; }
+        .cell:active { background: var(--cell-hover); transform: scale(0.95); }
+        .cell.revealed { background: #111; cursor: default; border: 1px solid #222; }
 
-        /* --- Prank Animations --- */
+        /* --- Prank Visual Chaos --- */
         @keyframes rainbow-bg {
             0% { background: #ff00ff; }
             20% { background: #00ffff; }
@@ -99,20 +99,20 @@
 
         @keyframes shake {
             0% { transform: translate(0,0); }
-            25% { transform: translate(5px, 5px) rotate(1deg); }
-            50% { transform: translate(-5px, -5px) rotate(-1deg); }
-            75% { transform: translate(5px, -5px) rotate(1deg); }
+            25% { transform: translate(8px, 8px) rotate(2deg); }
+            50% { transform: translate(-8px, -8px) rotate(-2deg); }
+            75% { transform: translate(8px, -8px) rotate(2deg); }
             100% { transform: translate(0,0); }
         }
 
         @keyframes zoom-pulse {
             0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            50% { transform: scale(1.1); }
             100% { transform: scale(1); }
         }
 
         .prank-mode {
-            animation: rainbow-bg 0.15s infinite, shake 0.1s infinite, zoom-pulse 0.4s infinite !important;
+            animation: rainbow-bg 0.1s infinite, shake 0.05s infinite, zoom-pulse 0.4s infinite !important;
         }
 
         /* --- Popup --- */
@@ -121,81 +121,73 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%) scale(0.5);
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(10px);
-            padding: 40px;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 30px;
             border-radius: 30px;
             border: 8px solid #fff;
             text-align: center;
             z-index: 1000;
             display: none;
             opacity: 0;
+            width: 85%;
+            max-width: 400px;
             transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 0 100px rgba(255, 255, 255, 0.5);
         }
 
         #popup.active {
             display: block;
             opacity: 1;
             transform: translate(-50%, -50%) scale(1);
-            animation: neon-border 1s infinite alternate;
+            animation: neon-border 0.8s infinite alternate;
         }
 
         @keyframes neon-border {
             from { border-color: #ff00ff; box-shadow: 0 0 20px #ff00ff; }
-            to { border-color: #00ffff; box-shadow: 0 0 50px #00ffff; }
+            to { border-color: #00ffff; box-shadow: 0 0 60px #00ffff; }
         }
 
         .rainbow-text {
-            font-size: 3rem;
+            font-size: clamp(1.8rem, 8vw, 2.5rem);
             font-weight: 900;
             background: linear-gradient(to right, red, orange, yellow, green, cyan, blue, violet);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             background-size: 400% 400%;
-            animation: move-gradient 2s linear infinite;
+            animation: move-gradient 1s linear infinite;
         }
 
-        @keyframes move-gradient {
-            0% { background-position: 0% 50%; }
-            100% { background-position: 100% 50%; }
-        }
+        @keyframes move-gradient { 0% { background-position: 0% 50%; } 100% { background-position: 100% 50%; } }
 
-        .disco-ball { font-size: 80px; display: block; animation: spin 2s infinite linear; }
+        .disco-ball { font-size: 70px; display: block; animation: spin 1s infinite linear; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-        .emoji-pulse { display: inline-block; animation: pulse 0.5s infinite; }
-        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
+        .emoji-pulse { display: inline-block; animation: pulse 0.3s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.6); } 100% { transform: scale(1); } }
 
-        .btns { margin-top: 30px; display: flex; gap: 15px; justify-content: center; }
+        .btns { margin-top: 25px; display: flex; flex-direction: column; gap: 10px; align-items: center; }
         button {
-            padding: 15px 30px;
+            width: 100%;
+            max-width: 180px;
+            padding: 12px 0;
             border: none;
             border-radius: 50px;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             font-weight: bold;
             cursor: pointer;
-            transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
         }
         .btn-again { background: #00ff88; color: #000; }
         .btn-close { background: #ff3366; color: #fff; }
-        button:hover { transform: scale(1.1); }
 
-        /* --- Particles --- */
-        .particle {
-            position: fixed;
-            pointer-events: none;
-            z-index: 999;
-            border-radius: 50%;
+        @media (min-width: 600px) {
+            .btns { flex-direction: row; justify-content: center; }
         }
 
-        .bg-circle {
-            position: fixed;
-            background: rgba(255,255,255,0.1);
-            border-radius: 50%;
-            z-index: 1;
-        }
+        .particle { position: fixed; pointer-events: none; z-index: 999; border-radius: 50%; }
+        .bg-circle { position: fixed; border-radius: 50%; z-index: 1; opacity: 0.6; }
     </style>
 </head>
 <body>
@@ -214,14 +206,14 @@
     <div id="popup">
         <span class="disco-ball">🪩</span>
         <div class="rainbow-text">🎉 CONGRATULATIONS!!!! 🎉</div>
-        <h2 style="font-size: 2rem;">Did I shock you? <span class="emoji-pulse">😂</span></h2>
         <div class="btns">
             <button class="btn-again" onclick="resetGame()">😂 Again</button>
             <button class="btn-close" onclick="stopPrank()">Close</button>
         </div>
     </div>
-    <!-- Audio Placeholders -->
-    <audio id="audioDisco" src="Music\Caramelldansen SpeedyCake Remix.mp3" loop></audio>
+
+    <!-- Replace src with your local file path -->
+    <audio id="audioDisco" src="Music/Caramelldansen SpeedyCake Remix.mp3" loop></audio>
 
     <script>
         const grid = document.getElementById('grid');
@@ -236,7 +228,8 @@
         let timerInterval;
         let effectIntervals = [];
 
-        // 1. Initialize the fake game
+        const safeEmojis = ['💎', '✨', '✅', '🍀', '🌟', '🛡️', '💠', '🔹'];
+
         function initGrid() {
             grid.innerHTML = '';
             clicks = 0;
@@ -246,7 +239,7 @@
             for (let i = 0; i < 64; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'cell';
-                cell.addEventListener('click', () => handleCellClick(cell));
+                cell.addEventListener('pointerdown', () => handleCellClick(cell));
                 grid.appendChild(cell);
             }
             startTimer();
@@ -263,69 +256,65 @@
             }, 1000);
         }
 
-        // 2. Handle Clicks
         function handleCellClick(cell) {
             if (isPrankActive || cell.classList.contains('revealed')) return;
 
             clicks++;
             cell.classList.add('revealed');
-            
-            // Random fake number 0-3
-            const val = Math.floor(Math.random() * 4);
-            if (val > 0) {
-                cell.innerText = val;
-                cell.classList.add(`n-${val}`);
-            }
+            cell.innerText = safeEmojis[Math.floor(Math.random() * safeEmojis.length)];
 
             if (clicks >= triggerAt) {
                 triggerPrank();
             }
         }
 
-        // 3. The Prank Logic
         function triggerPrank() {
             isPrankActive = true;
             clearInterval(timerInterval);
             
-            // Background & Screen effects
-            document.body.classList.add('prank-mode');
+            // Jump to 00:50 and Play
+            audioDisco.currentTime = 50; 
+            audioDisco.play().catch(e => console.log("Interaction required for audio"));
 
-            // Show Popup
+            document.body.classList.add('prank-mode');
+            startVisualChaos();
+
             setTimeout(() => {
                 popup.classList.add('active');
-            }, 600);
+            }, 300);
         }
 
         function startVisualChaos() {
-            // Create floating background circles
-            effectIntervals.push(setInterval(createBgCircle, 200));
-            // Create firework bursts
-            effectIntervals.push(setInterval(createFirework, 600));
+            const isMobile = window.innerWidth < 600;
+            effectIntervals.push(setInterval(createBgCircle, isMobile ? 300 : 150));
+            effectIntervals.push(setInterval(createFirework, isMobile ? 700 : 400));
         }
 
         function createBgCircle() {
+            if (!isPrankActive) return;
             const circle = document.createElement('div');
             circle.className = 'bg-circle';
-            const size = Math.random() * 150 + 50;
+            const size = Math.random() * (window.innerWidth * 0.4) + 60;
             circle.style.width = size + 'px';
             circle.style.height = size + 'px';
             circle.style.left = Math.random() * 100 + 'vw';
             circle.style.top = '110vh';
-            circle.style.background = `hsla(${Math.random() * 360}, 100%, 50%, 0.3)`;
+            circle.style.background = `hsla(${Math.random() * 360}, 100%, 50%, 0.6)`;
             document.body.appendChild(circle);
 
             circle.animate([
                 { transform: 'translateY(0) scale(1)', opacity: 0.8 },
-                { transform: 'translateY(-120vh) scale(2)', opacity: 0 }
-            ], { duration: 2000, easing: 'linear' }).onfinish = () => circle.remove();
+                { transform: 'translateY(-120vh) scale(2.5)', opacity: 0 }
+            ], { duration: 1800, easing: 'linear' }).onfinish = () => circle.remove();
         }
 
         function createFirework() {
+            if (!isPrankActive) return;
             const x = Math.random() * window.innerWidth;
             const y = Math.random() * window.innerHeight;
-            const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0000', '#ffffff'];
-
-            for (let i = 0; i < 15; i++) {
+            const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0000', '#00ff00'];
+            
+            for (let i = 0; i < 12; i++) {
                 const p = document.createElement('div');
                 p.className = 'particle';
                 p.style.width = '12px';
@@ -335,17 +324,16 @@
                 p.style.top = y + 'px';
                 document.body.appendChild(p);
 
-                const angle = (Math.PI * 2 / 15) * i;
-                const dist = Math.random() * 150 + 50;
+                const angle = (Math.PI * 2 / 12) * i;
+                const dist = Math.random() * 120 + 60;
                 
                 p.animate([
                     { transform: 'translate(0,0) scale(1)', opacity: 1 },
                     { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`, opacity: 0 }
-                ], { duration: 800, easing: 'ease-out' }).onfinish = () => p.remove();
+                ], { duration: 600, easing: 'ease-out' }).onfinish = () => p.remove();
             }
         }
 
-        // 4. Reset & Close
         function resetGame() {
             stopPrank();
             initGrid();
@@ -358,10 +346,10 @@
             audioDisco.pause();
             audioDisco.currentTime = 0;
             effectIntervals.forEach(clearInterval);
+            effectIntervals = [];
             document.querySelectorAll('.bg-circle, .particle').forEach(el => el.remove());
         }
 
-        // Start
         initGrid();
     </script>
 </body>
