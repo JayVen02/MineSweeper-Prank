@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minesweeper - Safe & Secure</title>
+    <style>
+        :root {
+            --bg: #121212;
+            --panel: #1e1e1e;
+            --cell: #2a2a2a;
+            --cell-hover: #3a3a3a;
+            --accent: #00ff88;
+        }
+
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        /* --- Minesweeper UI --- */
+        .game-header { text-align: center; margin-bottom: 20px; z-index: 10; }
+        .game-header h1 { margin: 0; font-size: 2.5rem; letter-spacing: 2px; color: var(--accent); }
+        .instruction { color: #888; font-size: 0.9rem; }
+
+        .dashboard {
+            background: var(--panel);
+            width: 320px;
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            border-radius: 10px 10px 0 0;
+            border: 2px solid #333;
+            border-bottom: none;
+            font-family: 'Courier New', monospace;
+            box-sizing: border-box;
+        }
+
+        .stat-box {
+            background: #000;
+            color: #ff0044;
+            padding: 5px 10px;
+            border: 1px solid #444;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(8, 40px);
+            grid-template-rows: repeat(8, 40px);
+            gap: 2px;
+            background: #333;
+            padding: 10px;
+            border: 2px solid #333;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            z-index: 10;
+        }
+
+        .cell {
+            width: 40px;
+            height: 40px;
+            background: var(--cell);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.1s;
+            user-select: none;
+        }
+
+        .cell:hover { background: var(--cell-hover); }
+        .cell.revealed { background: #111; cursor: default; }
+        .n-1 { color: #3498db; }
+        .n-2 { color: #2ecc71; }
+        .n-3 { color: #e74c3c; }
+
+        /* --- Prank Animations --- */
+        @keyframes rainbow-bg {
+            0% { background: #ff00ff; }
+            20% { background: #00ffff; }
+            40% { background: #ffff00; }
+            60% { background: #00ff00; }
+            80% { background: #ff0000; }
+            100% { background: #ff00ff; }
+        }
+
+        @keyframes shake {
+            0% { transform: translate(0,0); }
+            25% { transform: translate(5px, 5px) rotate(1deg); }
+            50% { transform: translate(-5px, -5px) rotate(-1deg); }
+            75% { transform: translate(5px, -5px) rotate(1deg); }
+            100% { transform: translate(0,0); }
+        }
+
+        @keyframes zoom-pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .prank-mode {
+            animation: rainbow-bg 0.15s infinite, shake 0.1s infinite, zoom-pulse 0.4s infinite !important;
+        }
+
+        /* --- Popup --- */
+        #popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 30px;
+            border: 8px solid #fff;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 100px rgba(255, 255, 255, 0.5);
+        }
+
+        #popup.active {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            animation: neon-border 1s infinite alternate;
+        }
+
+        @keyframes neon-border {
+            from { border-color: #ff00ff; box-shadow: 0 0 20px #ff00ff; }
+            to { border-color: #00ffff; box-shadow: 0 0 50px #00ffff; }
+        }
+
+        .rainbow-text {
+            font-size: 3rem;
+            font-weight: 900;
+            background: linear-gradient(to right, red, orange, yellow, green, cyan, blue, violet);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            background-size: 400% 400%;
+            animation: move-gradient 2s linear infinite;
+        }
+
+        @keyframes move-gradient {
+            0% { background-position: 0% 50%; }
+            100% { background-position: 100% 50%; }
+        }
+
+        .disco-ball { font-size: 80px; display: block; animation: spin 2s infinite linear; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .emoji-pulse { display: inline-block; animation: pulse 0.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.5); } 100% { transform: scale(1); } }
+
+        .btns { margin-top: 30px; display: flex; gap: 15px; justify-content: center; }
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .btn-again { background: #00ff88; color: #000; }
+        .btn-close { background: #ff3366; color: #fff; }
+        button:hover { transform: scale(1.1); }
+
+        /* --- Particles --- */
+        .particle {
+            position: fixed;
+            pointer-events: none;
+            z-index: 999;
+            border-radius: 50%;
+        }
+
+        .bg-circle {
+            position: fixed;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-header">
+        <h1>Minesweeper</h1>
+        <div class="instruction">Find all the safe tiles!</div>
+    </div>
+
+    <div class="dashboard">
+        <div class="stat-box" id="mine-display">💣 010</div>
+        <div class="stat-box" id="timer-display">00:00</div>
+    </div>
+    <div class="grid" id="grid"></div>
+
+    <div id="popup">
+        <span class="disco-ball">🪩</span>
+        <div class="rainbow-text">🎉 CONGRATULATIONS!!!! 🎉</div>
+        <h2 style="font-size: 2rem;">Did I shock you? <span class="emoji-pulse">😂</span></h2>
+        <div class="btns">
+            <button class="btn-again" onclick="resetGame()">😂 Again</button>
+            <button class="btn-close" onclick="stopPrank()">Close</button>
+        </div>
+    </div>
+    <!-- Audio Placeholders -->
+    <audio id="audioDisco" src="Music\Caramelldansen SpeedyCake Remix.mp3" loop></audio>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const popup = document.getElementById('popup');
+        const audioDisco = document.getElementById('audioDisco');
+        const timerDisplay = document.getElementById('timer-display');
+        
+        let clicks = 0;
+        let triggerAt = Math.floor(Math.random() * 3) + 7;
+        let isPrankActive = false;
+        let timerSeconds = 0;
+        let timerInterval;
+        let effectIntervals = [];
+
+        // 1. Initialize the fake game
+        function initGrid() {
+            grid.innerHTML = '';
+            clicks = 0;
+            triggerAt = Math.floor(Math.random() * 3) + 7;
+            isPrankActive = false;
+            
+            for (let i = 0; i < 64; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                cell.addEventListener('click', () => handleCellClick(cell));
+                grid.appendChild(cell);
+            }
+            startTimer();
+        }
+
+        function startTimer() {
+            clearInterval(timerInterval);
+            timerSeconds = 0;
+            timerInterval = setInterval(() => {
+                timerSeconds++;
+                const m = Math.floor(timerSeconds / 60).toString().padStart(2, '0');
+                const s = (timerSeconds % 60).toString().padStart(2, '0');
+                timerDisplay.innerText = `${m}:${s}`;
+            }, 1000);
+        }
+
+        // 2. Handle Clicks
+        function handleCellClick(cell) {
+            if (isPrankActive || cell.classList.contains('revealed')) return;
+
+            clicks++;
+            cell.classList.add('revealed');
+            
+            // Random fake number 0-3
+            const val = Math.floor(Math.random() * 4);
+            if (val > 0) {
+                cell.innerText = val;
+                cell.classList.add(`n-${val}`);
+            }
+
+            if (clicks >= triggerAt) {
+                triggerPrank();
+            }
+        }
+
+        // 3. The Prank Logic
+        function triggerPrank() {
+            isPrankActive = true;
+            clearInterval(timerInterval);
+            
+            // Background & Screen effects
+            document.body.classList.add('prank-mode');
+
+            // Show Popup
+            setTimeout(() => {
+                popup.classList.add('active');
+            }, 600);
+        }
+
+        function startVisualChaos() {
+            // Create floating background circles
+            effectIntervals.push(setInterval(createBgCircle, 200));
+            // Create firework bursts
+            effectIntervals.push(setInterval(createFirework, 600));
+        }
+
+        function createBgCircle() {
+            const circle = document.createElement('div');
+            circle.className = 'bg-circle';
+            const size = Math.random() * 150 + 50;
+            circle.style.width = size + 'px';
+            circle.style.height = size + 'px';
+            circle.style.left = Math.random() * 100 + 'vw';
+            circle.style.top = '110vh';
+            circle.style.background = `hsla(${Math.random() * 360}, 100%, 50%, 0.3)`;
+            document.body.appendChild(circle);
+
+            circle.animate([
+                { transform: 'translateY(0) scale(1)', opacity: 0.8 },
+                { transform: 'translateY(-120vh) scale(2)', opacity: 0 }
+            ], { duration: 2000, easing: 'linear' }).onfinish = () => circle.remove();
+        }
+
+        function createFirework() {
+            const x = Math.random() * window.innerWidth;
+            const y = Math.random() * window.innerHeight;
+            const colors = ['#ff00ff', '#00ffff', '#ffff00', '#ff0000', '#ffffff'];
+
+            for (let i = 0; i < 15; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                p.style.width = '12px';
+                p.style.height = '12px';
+                p.style.background = colors[Math.floor(Math.random() * colors.length)];
+                p.style.left = x + 'px';
+                p.style.top = y + 'px';
+                document.body.appendChild(p);
+
+                const angle = (Math.PI * 2 / 15) * i;
+                const dist = Math.random() * 150 + 50;
+                
+                p.animate([
+                    { transform: 'translate(0,0) scale(1)', opacity: 1 },
+                    { transform: `translate(${Math.cos(angle) * dist}px, ${Math.sin(angle) * dist}px) scale(0)`, opacity: 0 }
+                ], { duration: 800, easing: 'ease-out' }).onfinish = () => p.remove();
+            }
+        }
+
+        // 4. Reset & Close
+        function resetGame() {
+            stopPrank();
+            initGrid();
+        }
+
+        function stopPrank() {
+            isPrankActive = false;
+            document.body.classList.remove('prank-mode');
+            popup.classList.remove('active');
+            audioDisco.pause();
+            audioDisco.currentTime = 0;
+            effectIntervals.forEach(clearInterval);
+            document.querySelectorAll('.bg-circle, .particle').forEach(el => el.remove());
+        }
+
+        // Start
+        initGrid();
+    </script>
+</body>
+</html>
